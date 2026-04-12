@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="display-5" style="font-family: 'Playfair Display', serif;">Exclusive Collection</h2>
+        <a href="{% url 'view_cart' %}" class="btn btn-outline-dark position-relative rounded-0 px-4">
+            🛒 VIEW BAG
+            <span class="badge rounded-pill bg-gold" style="position: absolute; top: -10px; right: -10px;">
+                {{ request.session.cart|length }}
+            </span>
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-9">
+            <form action="{% url 'catalog' %}" method="get" class="d-flex">
+                <input class="form-control me-2 rounded-0" type="search" placeholder="Search bags by name or description..." aria-label="Search" name="q" value="{{ query|default_if_none:'' }}">
+                <button class="btn btn-outline-dark rounded-0" type="submit">Search</button>
+            </form>
+        </div>
+        <div class="col-md-3">
+            <div class="dropdown">
+                <button class="btn btn-outline-dark dropdown-toggle w-100 rounded-0" type="button" id="categoryFilter" data-bs-toggle="dropdown" aria-expanded="false">
+                    Category: {% if selected_category %}{{ category_names.selected_category }}{% else %}All{% endif %}
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="categoryFilter">
+                    <li><a class="dropdown-item {% if not selected_category %}active{% endif %}" href="{% url 'catalog' %}">All</a></li>
+                    {% for category in categories %}
+                        <li><a class="dropdown-item {% if selected_category == category.id %}active{% endif %}" href="{% url 'catalog' %}?category={{ category.id }}">{{ category.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for bag in bags %}
+            <div class="col-md-4 mb-5">
+                <div class="card h-100 shadow-sm border-0">
+                    <a href="{% url 'bag_detail' bag.id %}" class="position-relative">
+                        {% if bag.image %}
+                            <img src="{{ bag.image.url }}" class="card-img-top" style="height: 400px; object-fit: cover;">
+                        {% endif %}
+                        
+                        {# Urgency Badges Logic #}
+                        {% if bag.stock_count > 0 and bag.stock_count < 5 %}
+                            <span class="position-absolute top-0 start-0 m-3 badge rounded-0 px-3 py-2" 
+                                  style="background-color: rgba(212, 175, 55, 0.9); font-size: 0.7rem; letter-spacing: 1px;">
+                                ONLY {{ bag.stock_count }} LEFT
+                            </span>
+                        {% elif bag.stock_count == 0 %}
+                            <span class="position-absolute top-0 start-0 m-3 badge bg-secondary rounded-0 px-3 py-2" 
+                                  style="font-size: 0.7rem; letter-spacing: 1px;">
+                                OUT OF STOCK
+                            </span>
+                        {% endif %}
+                    </a>
+
+                    <div class="card-body text-center bg-white">
+                        <h5 class="card-title text-uppercase mb-1" style="font-size: 0.9rem; letter-spacing: 2px;">
+                            {{ bag.name }}
+                        </h5>
+                        <p class="text-muted small mb-4">KES {{ bag.price }}</p>
+                        
+                        <div class="d-grid gap-2">
+                            {% if bag.stock_count > 0 %}
+                                <a href="{% url 'add_to_cart' bag.id %}" class="btn btn-gold py-2 rounded-0">
+                                    ADD TO CART
+                                </a>
+                            {% else %}
+                                <button class="btn btn-outline-secondary py-2 rounded-0" disabled>
+                                    SOLD OUT
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted italic">The collection is currently being curated. Please check back soon.</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

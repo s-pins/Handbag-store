@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="display-5 mb-4" style="font-family: 'Playfair Display', serif;">Order Tracking</h2>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Order #{{ order.id }} Details</h5>
+                    <p><strong>Status:</strong> 
+                        <span class="badge 
+                            {% if order.status == 'Paid' %}bg-success
+                            {% elif order.status == 'Pending' %}bg-warning text-dark
+                            {% elif order.status == 'Shipped' %}bg-info
+                            {% elif order.status == 'Delivered' %}bg-primary
+                            {% else %}bg-secondary
+                            {% endif %}">{{ order.status }}</span>
+                    </p>
+                    <p><strong>Order Date:</strong> {{ order.created_at|date:"F d, Y P" }}</p>
+                    <p><strong>Last Updated:</strong> {{ order.updated_at|date:"F d, Y P" }}</p>
+                    <p><strong>Total Amount:</strong> KES {{ order.total_amount }}</p>
+                    {% if order.mpesa_transaction_id %}
+                        <p><strong>M-Pesa Transaction ID:</strong> {{ order.mpesa_transaction_id }}</p>
+                    {% endif %}
+                    <p><strong>Phone Number:</strong> {{ order.phone_number }}</p>
+
+                    <hr class="my-3">
+
+                    <h6>Items in this Order:</h6>
+                    <ul class="list-group list-group-flush">
+                        {% for item in order.orderitem_set.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ item.quantity }} x {{ item.handbag.name }}</span>
+                                <span class="fw-bold">KES {{ item.price }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'profile' %}" class="btn btn-outline-dark rounded-0 px-4">Back to Profile</a>
+                <a href="{% url 'download_invoice' order.id %}" class="btn btn-gold rounded-0 px-4">Download Invoice</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

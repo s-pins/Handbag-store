@@ -1,0 +1,27 @@
+:root {
+    --gold: #D4AF37;
+    --charcoal: #1a1a1a;
+    /* Softened background to ivory/linen */
+    --bg-cream: #F5F2ED; 
+    --card-white: #ffffff;
+}
+
+body { 
+    background-color: var(--bg-cream); 
+    font-family: 'Montserrat', sans-serif;
+    color: var(--charcoal);
+}
+
+.card {
+    border: none;
+    background-color: var(--card-white);
+    transition: all 0.4s ease;
+}
+
+/* Subtle border for the cart area to separate from the cream bg */
+.cart-container {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}

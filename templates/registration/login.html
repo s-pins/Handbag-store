@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load socialaccount %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-center mb-4" style="font-family: 'Playfair Display', serif;">Login</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <button type="submit" class="btn btn-gold w-100 mt-3 py-2 rounded-0">LOGIN</button>
+                    </form>
+                    <p class="text-center mt-3 mb-0">
+                        Don't have an account? <a href="{% url 'register' %}" class="text-dark fw-bold">Register here</a>
+                    </p>
+                    <div class="text-center mt-3">
+                        <p>Or login with:</p>
+                        <a href="{% provider_login_url 'google' %}" class="btn btn-primary w-100 py-2 rounded-0">
+                            <i class="fab fa-google me-2"></i> Login with Google
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

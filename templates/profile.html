@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="display-5 mb-4" style="font-family: 'Playfair Display', serif;">My Profile</h2>
+
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">User Information</h5>
+                    <p><strong>Username:</strong> {{ user.username }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Account created:</strong> {{ user.date_joined|date:"F d, Y" }}</p>
+                </div>
+            </div>
+
+            <h3 class="display-6 mt-5 mb-4" style="font-family: 'Playfair Display', serif; font-size: 1.8rem;">Order History</h3>
+
+            {% if orders %}
+                <div class="list-group">
+                    {% for order in orders %}
+                        <div class="list-group-item list-group-item-action mb-3 shadow-sm border-0 rounded">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Order #{{ order.id }}</h5>
+                                <small class="text-muted">{{ order.created_at|date:"F d, Y P" }}</small>
+                            </div>
+                            <p class="mb-1"><strong>Total Amount:</strong> KES {{ order.total_amount }}</p>
+                            <p class="mb-1"><strong>Status:</strong> <span class="badge 
+                                {% if order.status == 'Paid' %}bg-success
+                                {% elif order.status == 'Pending' %}bg-warning text-dark
+                                {% elif order.status == 'Shipped' %}bg-info
+                                {% elif order.status == 'Delivered' %}bg-primary
+                                {% else %}bg-secondary
+                                {% endif %}">{{ order.status }}</span></p>
+                            <small class="text-muted">Transaction ID: {{ order.mpesa_transaction_id|default:"N/A" }}</small>
+                            <div class="mt-2">
+                                <a href="{% url 'order_tracking' order.id %}" class="btn btn-sm btn-outline-primary rounded-0 me-2">
+                                    Track Order
+                                </a>
+                                {% if order.status == 'Paid' %}
+                                    <a href="{% url 'download_invoice' order.id %}" class="btn btn-sm btn-outline-info rounded-0">
+                                        Download Invoice
+                                    </a>
+                                {% endif %}
+                            </div>
+                            
+                            <hr class="my-2">
+                            <h6>Items:</h6>
+                            <ul class="list-unstyled">
+                                {% for item in order.orderitem_set.all %}
+                                    <li>{{ item.quantity }} x {{ item.handbag.name }} @ KES {{ item.price }} each</li>
+                                {% endfor %}
+                            </ul>
+                            {# Link to order detail page will go here later #}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted">You have no orders yet.</p>
+                <a href="{% url 'catalog' %}" class="btn btn-gold mt-3">Start Shopping</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

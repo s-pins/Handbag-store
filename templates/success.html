@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 pt-5 text-center">
+    <div class="py-5">
+        <h2 class="display-4 text-success mb-4">Payment Successful!</h2>
+        <p class="lead">Thank you for your purchase. Your order is being processed.</p>
+        <hr class="my-4">
+        <p class="mb-4">You will receive a confirmation email shortly.</p>
+        <a href="{% url 'catalog' %}" class="btn btn-gold btn-lg rounded-0 px-5">Continue Shopping</a>
+    </div>
+</div>
+{% endblock %}

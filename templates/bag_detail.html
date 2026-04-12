@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row gx-5">
+        <div class="col-md-7 mb-4">
+            <img src="{{ bag.image.url }}" class="img-fluid shadow-sm" alt="{{ bag.name }}" style="width: 100%; border-radius: 4px;">
+        </div>
+        <div class="col-md-5">
+            <p class="text-muted text-uppercase mb-2 small" style="letter-spacing: 2px;">{{ bag.category.name }}</p>
+            <h1 class="display-5 mb-3">{{ bag.name }}</h1>
+            <h3 class="mb-4 fw-light text-secondary">KES {{ bag.price }}</h3>
+            
+            <div class="py-4 border-top border-bottom mb-4">
+                <p class="text-muted">{{ bag.description }}</p>
+            </div>
+
+            <div class="d-grid">
+                <a href="{% url 'add_to_cart' bag.id %}" class="btn btn-gold btn-lg">Add to Shopping Bag</a>
+            </div>
+            
+            <div class="mt-4">
+                <p class="small text-muted"><i class="bi bi-truck"></i> Complimentary shipping on all luxury orders.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
