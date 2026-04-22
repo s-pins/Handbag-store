@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h3 class="card-title text-center mb-2" style="font-family: 'Playfair Display', serif;">Almost There</h3>
+                    <p class="text-center text-muted small mb-4">
+                        Complete your profile to finish signing in with {{ account.get_provider.name }}.
+                    </p>
+
+                    <form method="post" action="{% url 'socialaccount_signup' %}">
+                        {% csrf_token %}
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {% for error in form.non_field_errors %}
+                                    <p class="mb-0">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label small text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">
+                                    {{ field.label }}
+                                </label>
+                                <input
+                                    type="{{ field.field.widget.input_type }}"
+                                    name="{{ field.html_name }}"
+                                    id="{{ field.id_for_label }}"
+                                    class="form-control rounded-0 border-0 bg-light{% if field.errors %} is-invalid{% endif %}"
+                                    {% if field.value %}value="{{ field.value }}"{% endif %}
+                                    {% if field.field.required %}required{% endif %}
+                                >
+                                {% for error in field.errors %}
+                                    <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+
+                        {{ redirect_field }}
+                        <button type="submit" class="btn btn-gold w-100 mt-3 py-2 rounded-0">COMPLETE SIGN UP</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

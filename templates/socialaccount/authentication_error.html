@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 pt-5 text-center">
+    <div class="py-5">
+        <h2 class="display-5 mb-3" style="font-family: 'Playfair Display', serif;">Authentication Error</h2>
+        <p class="text-muted lead mb-4">Something went wrong during sign-in. Please try again.</p>
+        <a href="{% url 'account_login' %}" class="btn btn-gold rounded-0 px-5">Back to Login</a>
+    </div>
+</div>
+{% endblock %}
