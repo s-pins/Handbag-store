@@ -103,9 +103,7 @@ def clear_cart(request):
 def initiate_payment(request):
     if request.method == "POST":
         phone_number = request.POST.get("phone")
-        total_amount = float(
-            request.POST.get("amount")
-        )  # Ensure amount is float for decimal field
+        total_amount = float(request.POST.get("amount"))
 
         cart = request.session.get("cart", {})
         if not cart:
@@ -127,15 +125,11 @@ def initiate_payment(request):
         for bag_id, quantity in cart.items():
             bag = get_object_or_404(Handbag, id=bag_id)
             OrderItem.objects.create(
-                order=order,
-                handbag=bag,
-                quantity=quantity,
-                price=bag.price,  # Store price at the time of order
+                order=order, handbag=bag, quantity=quantity, price=bag.price
             )
 
         # 3. Trigger STK Push
         cl = MpesaClient()
-        # Use a unique account reference for M-Pesa, e.g., order ID
         account_reference = f"Order_{order.id}"
         transaction_desc = f"Payment for Order {order.id} from The Handbag Store"
 
@@ -143,29 +137,32 @@ def initiate_payment(request):
             phone_number, total_amount, account_reference, transaction_desc
         )
 
-        if response.get("ResponseCode") == "0":
-            # Store the M-Pesa CheckoutRequestID for callback reconciliation
-            order.mpesa_checkout_request_id = response.get(
-                "CheckoutRequestID"
-            )  # Add this field to Order model later
+        if str(response.get("ResponseCode")) == "0":
+            order.mpesa_checkout_request_id = response.get("CheckoutRequestID")
             order.save()
+
+            # Clear the cart immediately after successful STK push initiation
+            request.session["cart"] = {}
+            request.session.modified = True
 
             messages.success(
                 request,
-                "Check your phone for the M-Pesa prompt to complete your payment!",
+                "M-Pesa prompt sent! Enter your PIN on your phone to complete payment.",
             )
-            # Redirect to a page indicating pending payment or back to cart with status
-            return redirect(
-                "success"
-            )  # Using generic success for now, will create a dedicated pending page
+            return redirect("success")
         else:
-            # If STK push fails, delete the created order to avoid orphan records
             order.delete()
+            error_msg = (
+                response.get("CustomerMessage")
+                or response.get("errorMessage")
+                or "Unknown error"
+            )
             messages.error(
                 request,
-                f"M-Pesa payment initiation failed: {response.get('CustomerMessage', 'Unknown error')}. Please try again.",
+                f"M-Pesa payment initiation failed: {error_msg}. Please try again.",
             )
             return redirect("view_cart")
+
     return redirect("view_cart")  # Should not be accessed directly via GET
 
 

@@ -1,13 +1,52 @@
-{% extends 'base.html' %}
-
-{% block content %}
+{% extends 'base.html' %} {% block content %}
 <div class="container mt-5 pt-5 text-center">
     <div class="py-5">
-        <h2 class="display-4 text-success mb-4">Payment Successful!</h2>
-        <p class="lead">Thank you for your purchase. Your order is being processed.</p>
-        <hr class="my-4">
-        <p class="mb-4">You will receive a confirmation email shortly.</p>
-        <a href="{% url 'catalog' %}" class="btn btn-gold btn-lg rounded-0 px-5">Continue Shopping</a>
+        <div class="mb-4">
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="64"
+                height="64"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="#D4AF37"
+                stroke-width="1.5"
+            >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"
+                />
+            </svg>
+        </div>
+
+        <h2
+            class="display-5 mb-3"
+            style="font-family: &quot;Playfair Display&quot;, serif"
+        >
+            M-Pesa Prompt Sent
+        </h2>
+        <p class="lead text-muted mb-2">
+            Check your phone and enter your M-Pesa PIN to complete the payment.
+        </p>
+        <p class="text-muted small mb-5">
+            Once confirmed, your order will be updated automatically. You can
+            track it from your profile.
+        </p>
+
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a
+                href="{% url 'catalog' %}"
+                class="btn btn-gold rounded-0 px-5 py-2"
+                >Continue Shopping</a
+            >
+            {% if user.is_authenticated %}
+            <a
+                href="{% url 'profile' %}"
+                class="btn btn-outline-dark rounded-0 px-5 py-2"
+                >View My Orders</a
+            >
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
