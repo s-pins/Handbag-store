@@ -57,9 +57,20 @@ LOGIN_REDIRECT_URL = "/"
 ACCOUNT_LOGOUT_REDIRECT_URL = "/"
 
 ACCOUNT_FORMS = {
-    "login": "core.forms.CustomAuthenticationForm",
     "signup": "core.forms.CustomUserCreationForm",
 }
+
+# Tell allauth to use email as the login identifier
+ACCOUNT_LOGIN_METHODS = {"email"}  # allauth 65+
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+
+# Alternatively if your allauth version uses the older config style:
+# ACCOUNT_AUTHENTICATION_METHOD = 'email'
+# ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_USERNAME_REQUIRED = True
+
+ACCOUNT_EMAIL_VERIFICATION = "none"  # don't require email confirmation
+SOCIALACCOUNT_LOGIN_ON_GET = True  # skip intermediate OAuth confirm page
 
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
