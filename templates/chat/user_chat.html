@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+
+            <div class="d-flex align-items-center mb-4 gap-3">
+                <div style="width:42px;height:42px;background:#1a1a1a;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                        <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h5 class="mb-0" style="font-family:'Playfair Display',serif;">Store Support</h5>
+                    <small class="text-muted">We typically reply within minutes</small>
+                </div>
+            </div>
+
+            <!-- Message thread -->
+            <div id="chat-messages"
+                 style="height:420px;overflow-y:auto;background:#f9f9f9;border:1px solid #eee;padding:20px;border-radius:4px;">
+                {% for msg in chat_messages %}
+                    <div class="d-flex mb-3 {% if msg.is_from_admin %}justify-content-start{% else %}justify-content-end{% endif %}">
+                        <div style="max-width:75%;">
+                            <div class="px-3 py-2 rounded-3"
+                                 style="font-size:0.9rem;
+                                 {% if msg.is_from_admin %}background-color:white;border:1px solid #eee;color:#1a1a1a;{% else %}background-color:#1a1a1a;color:white;{% endif %}">
+                                {{ msg.content }}
+                            </div>
+                            <div class="text-muted mt-1" style="font-size:0.7rem;{% if not msg.is_from_admin %}text-align:right;{% endif %}">
+                                {{ msg.timestamp|time:"H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-muted py-5" id="empty-state">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="#ccc" viewBox="0 0 16 16" class="mb-3 d-block mx-auto">
+                            <path d="M2.678 11.894a1 1 0 0 1 .287.801 10.97 10.97 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8.06 8.06 0 0 0 8 14c3.996 0 7-2.807 7-6 0-3.192-3.004-6-7-6S1 4.808 1 8c0 1.468.617 2.83 1.678 3.894zm-.493 3.905a21.682 21.682 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a9.68 9.68 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9.06 9.06 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105z"/>
+                        </svg>
+                        <p class="mb-0 small">Send a message to start the conversation.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Input -->
+            <div class="d-flex gap-2 mt-3">
+                <input type="text" id="chat-input"
+                       class="form-control rounded-0 border-0 bg-light"
+                       placeholder="Type your message..."
+                       autocomplete="off"
+                       style="font-size:0.9rem;">
+                <button id="send-btn" class="btn btn-gold rounded-0 px-4">Send</button>
+            </div>
+            <div id="ws-status" class="text-muted small mt-2"></div>
+
+            <p class="mt-3">
+                <a href="{% url 'catalog' %}" class="text-muted small">← Back to shop</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const wsUrl = (window.location.protocol === "https:" ? "wss://" : "ws://") + window.location.host + "/ws/chat/";
+    const messagesDiv = document.getElementById("chat-messages");
+    const input = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("send-btn");
+    const statusDiv = document.getElementById("ws-status");
+
+    let chatSocket = null;
+
+    function connect() {
+        chatSocket = new WebSocket(wsUrl);
+
+        chatSocket.onopen = function() {
+            statusDiv.textContent = "";
+            sendBtn.disabled = false;
+        };
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const isAdmin = data.is_from_admin;
+            const emptyState = document.getElementById("empty-state");
+            if (emptyState) emptyState.remove();
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "d-flex mb-3 " + (isAdmin ? "justify-content-start" : "justify-content-end");
+            wrapper.innerHTML =
+                '<div style="max-width:75%;">' +
+                    '<div class="px-3 py-2 rounded-3" style="font-size:0.9rem;' +
+                        (isAdmin ? 'background-color:white;border:1px solid #eee;color:#1a1a1a;' : 'background-color:#1a1a1a;color:white;') + '">' +
+                        escapeHtml(data.message) +
+                    '</div>' +
+                    '<div class="text-muted mt-1" style="font-size:0.7rem;' + (!isAdmin ? 'text-align:right;' : '') + '">' +
+                        data.timestamp +
+                    '</div>' +
+                '</div>';
+            messagesDiv.appendChild(wrapper);
+            scrollToBottom();
+        };
+
+        chatSocket.onclose = function() {
+            statusDiv.textContent = "Disconnected. Reconnecting...";
+            sendBtn.disabled = true;
+            setTimeout(connect, 3000);
+        };
+
+        chatSocket.onerror = function() {
+            statusDiv.textContent = "Connection error.";
+        };
+    }
+
+    function scrollToBottom() {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function sendMessage() {
+        const message = input.value.trim();
+        if (!message || !chatSocket || chatSocket.readyState !== WebSocket.OPEN) return;
+        chatSocket.send(JSON.stringify({ message: message }));
+        input.value = "";
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") sendMessage();
+    });
+
+    function escapeHtml(text) {
+        return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    connect();
+    scrollToBottom();
+</script>
+{% endblock %}

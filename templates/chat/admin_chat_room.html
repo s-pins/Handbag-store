@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+
+            <div class="d-flex align-items-center mb-4 gap-3">
+                <a href="{% url 'admin_chat_list' %}" class="text-dark me-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                    </svg>
+                </a>
+                <div style="width:42px;height:42px;background:#1a1a1a;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                        <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h5 class="mb-0" style="font-family:'Playfair Display',serif;">{{ chat_user.username }}</h5>
+                    <small class="text-muted">{{ chat_user.email }}</small>
+                </div>
+            </div>
+
+            <!-- Message thread -->
+            <div id="chat-messages"
+                 style="height:420px;overflow-y:auto;background:#f9f9f9;border:1px solid #eee;padding:20px;border-radius:4px;">
+                {% for msg in chat_messages %}
+                    <div class="d-flex mb-3 {% if msg.is_from_admin %}justify-content-end{% else %}justify-content-start{% endif %}">
+                        <div style="max-width:75%;">
+                            <div class="px-3 py-2 rounded-3"
+                                 style="font-size:0.9rem;
+                                 {% if msg.is_from_admin %}background-color:#1a1a1a;color:white;{% else %}background-color:white;border:1px solid #eee;color:#1a1a1a;{% endif %}">
+                                {{ msg.content }}
+                            </div>
+                            <div class="text-muted mt-1" style="font-size:0.7rem;{% if msg.is_from_admin %}text-align:right;{% endif %}">
+                                {{ msg.timestamp|time:"H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center text-muted py-5" id="empty-state">
+                        <p class="mb-0 small">No messages yet. Start the conversation.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Input -->
+            <div class="d-flex gap-2 mt-3">
+                <input type="text" id="chat-input"
+                       class="form-control rounded-0 border-0 bg-light"
+                       placeholder="Reply to {{ chat_user.username }}..."
+                       autocomplete="off"
+                       style="font-size:0.9rem;">
+                <button id="send-btn" class="btn btn-gold rounded-0 px-4">Send</button>
+            </div>
+            <div id="ws-status" class="text-muted small mt-2"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatUserId = "{{ chat_user.id }}";
+    const wsUrl = (window.location.protocol === "https:" ? "wss://" : "ws://") + window.location.host + "/ws/chat/" + chatUserId + "/";
+    const messagesDiv = document.getElementById("chat-messages");
+    const input = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("send-btn");
+    const statusDiv = document.getElementById("ws-status");
+
+    let chatSocket = null;
+
+    function connect() {
+        chatSocket = new WebSocket(wsUrl);
+
+        chatSocket.onopen = function() {
+            statusDiv.textContent = "";
+            sendBtn.disabled = false;
+        };
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const isAdmin = data.is_from_admin;
+            const emptyState = document.getElementById("empty-state");
+            if (emptyState) emptyState.remove();
+
+            const wrapper = document.createElement("div");
+            wrapper.className = "d-flex mb-3 " + (isAdmin ? "justify-content-end" : "justify-content-start");
+            wrapper.innerHTML =
+                '<div style="max-width:75%;">' +
+                    '<div class="px-3 py-2 rounded-3" style="font-size:0.9rem;' +
+                        (isAdmin ? 'background-color:#1a1a1a;color:white;' : 'background-color:white;border:1px solid #eee;color:#1a1a1a;') + '">' +
+                        escapeHtml(data.message) +
+                    '</div>' +
+                    '<div class="text-muted mt-1" style="font-size:0.7rem;' + (isAdmin ? 'text-align:right;' : '') + '">' +
+                        data.timestamp +
+                    '</div>' +
+                '</div>';
+            messagesDiv.appendChild(wrapper);
+            scrollToBottom();
+        };
+
+        chatSocket.onclose = function() {
+            statusDiv.textContent = "Disconnected. Reconnecting...";
+            sendBtn.disabled = true;
+            setTimeout(connect, 3000);
+        };
+
+        chatSocket.onerror = function() {
+            statusDiv.textContent = "Connection error.";
+        };
+    }
+
+    function scrollToBottom() {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    function sendMessage() {
+        const message = input.value.trim();
+        if (!message || !chatSocket || chatSocket.readyState !== WebSocket.OPEN) return;
+        chatSocket.send(JSON.stringify({ message: message }));
+        input.value = "";
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    input.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") sendMessage();
+    });
+
+    function escapeHtml(text) {
+        return text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    connect();
+    scrollToBottom();
+</script>
+{% endblock %}

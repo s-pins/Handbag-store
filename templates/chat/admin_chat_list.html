@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5 pt-5">
+    <h2 class="display-5 mb-4" style="font-family:'Playfair Display',serif;">Customer Messages</h2>
+
+    {% if rooms %}
+        <div class="list-group">
+            {% for room in rooms %}
+                <a href="{% url 'admin_chat_room' room.user.id %}"
+                   class="list-group-item list-group-item-action border-0 shadow-sm mb-2 rounded d-flex justify-content-between align-items-center"
+                   style="padding:16px 20px; text-decoration:none; color:inherit;">
+
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:42px;height:42px;background:#1a1a1a;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
+                                <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="fw-bold" style="font-size:0.9rem;">
+                                {{ room.user.username }}
+                                <span class="text-muted fw-normal small">{{ room.user.email }}</span>
+                            </div>
+                            <div class="text-muted" style="font-size:0.8rem;">
+                                {% if room.messages.last %}
+                                    {% if room.messages.last.is_from_admin %}You: {% endif %}
+                                    {{ room.messages.last.content|truncatechars:55 }}
+                                {% else %}
+                                    No messages yet
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-column align-items-end gap-1" style="min-width:60px;">
+                        {% if room.messages.last %}
+                            <small class="text-muted">{{ room.messages.last.timestamp|time:"H:i" }}</small>
+                        {% endif %}
+                        {% if room.unread_count_for_admin > 0 %}
+                            <span class="badge rounded-pill text-white" style="background-color:#D4AF37;">
+                                {{ room.unread_count_for_admin }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted mt-3">No customer conversations yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
