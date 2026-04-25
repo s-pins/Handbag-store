@@ -60,6 +60,8 @@ ACCOUNT_FORMS = {
     "signup": "core.forms.CustomUserCreationForm",
 }
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 # Tell allauth to use email as the login identifier
 ACCOUNT_LOGIN_METHODS = {"email"}  # allauth 65+
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
